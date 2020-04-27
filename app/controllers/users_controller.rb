@@ -4,48 +4,43 @@ class UsersController < ApplicationController
     if Helpers.is_logged_in?(session)
       redirect to '/tweets'
     end
-
-    erb :"/users/create_user"
+    erb :'/users/new'
   end
 
   post '/signup' do
-    params.each do |label, input|
-      if input.empty?
-        flash[:new_user_error] = "Please enter a value for #{label}"
-        redirect to '/signup'
-      end
+    @user = User.create(params)
+    if @user.valid?
+      @user.save
+      session["user_id"] = @user.id
+      redirect to '/tweets'
+    else
+      flash[:message] = "Missing Signup Field, Please Try Again"
+      redirect to '/signup'
     end
-
-    user = User.create(:username => params["username"], :email => params["email"], :password => params["password"])
-    session[:user_id] = user.id
-
-    redirect to '/tweets'
   end
 
   get '/login' do
     if Helpers.is_logged_in?(session)
       redirect to '/tweets'
     end
-
-    erb :"/users/login"
+    erb :'/users/login'
   end
 
   post '/login' do
-    user = User.find_by(:username => params["username"])
+    @user = User.find_by(username: params["username"])
 
-    if user && user.authenticate(params[:password])
-      session[:user_id] = user.id
+    if @user && @user.authenticate(params[:password])
+      session[:user_id] = @user.id
       redirect to '/tweets'
     else
-      flash[:login_error] = "Incorrect login. Please try again."
-      redirect to '/login'
+      flash[:login_error] = "Login Info Incorrect.  Please try again."
+      erb :'/users/login'
     end
   end
 
   get '/users/:slug' do
-    slug = params[:slug]
-    @user = User.find_by_slug(slug)
-    erb :"users/show"
+    @user = User.find_by_slug(params[:slug])
+    erb :'/users/show'
   end
 
   get '/logout' do
@@ -56,6 +51,5 @@ class UsersController < ApplicationController
       redirect to '/'
     end
   end
-
 
 end
