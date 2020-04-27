@@ -1,10 +1,5 @@
 class TweetsController < ApplicationController
 
-    get '/' do
-        @tweets = Tweet.all
-        erb :index
-    end
-
     get '/my-tweets' do
         @user = User.find(session[:user_id])
         erb :'users/my_tweets'
@@ -23,7 +18,7 @@ class TweetsController < ApplicationController
 
     get '/tweets/:id/edit' do
         @tweet = Tweet.find_by_id(params[:id])
-
+        
         erb :'/tweets/edit'
     end
 
@@ -31,7 +26,7 @@ class TweetsController < ApplicationController
         @tweet = Tweet.find_by_id(params[:id])
         @tweet.content = params[:content]
         @tweet.save
-
+    
         redirect to("/tweets/#{@tweet.id}")
     end
 
