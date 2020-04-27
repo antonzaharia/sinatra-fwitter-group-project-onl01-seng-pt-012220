@@ -1,0 +1,8 @@
+<h1>Tweets</h1>
+
+<a href="/my-tweets">My Tweets</a>
+
+<% @tweets.each do |tweet| %>
+<h2><%= tweet.content %></h2>
+<h4>Posted by: <%= tweet.user.username %></h4>
+<% end %>
