@@ -1,30 +1,36 @@
 class TweetsController < ApplicationController
 
   get '/tweets' do
-    if !Helpers.is_logged_in?(session)
+    if Helpers.is_logged_in?(session)
+      @user = Helpers.current_user(session)
+      erb :'/tweets/index'
+    else
       redirect to '/login'
     end
-    @tweets = Tweet.all
-    @user = Helpers.current_user(session)
-    erb :"/tweets/tweets"
   end
 
   get '/tweets/new' do
-    if !Helpers.is_logged_in?(session)
+    if Helpers.is_logged_in?(session)
+      @user = Helpers.current_user(session)
+      erb :'/tweets/new'
+    else
       redirect to '/login'
     end
-    erb :"/tweets/create_tweet"
   end
 
   post '/tweets' do
-    user = Helpers.current_user(session)
-    if params["content"].empty?
-      flash[:empty_tweet] = "Please enter content for your tweet"
+    if !Helpers.is_logged_in?(session)
+      redirect to '/login'
+    end
+    @user = Helpers.current_user(session)
+    @tweet = Tweet.new(content: params["content"], user_id: @user.id)
+    if @tweet.valid?
+      @tweet.save
+      redirect to '/tweets'
+    else
+      flash[:message] = "No Content"
       redirect to '/tweets/new'
     end
-    tweet = Tweet.create(:content => params["content"], :user_id => user.id)
-
-    redirect to '/tweets'
   end
 
   get '/tweets/:id' do
@@ -32,7 +38,7 @@ class TweetsController < ApplicationController
       redirect to '/login'
     end
     @tweet = Tweet.find(params[:id])
-    erb :"tweets/show_tweet"
+    erb :'/tweets/show'
   end
 
   get '/tweets/:id/edit' do
@@ -40,36 +46,39 @@ class TweetsController < ApplicationController
       redirect to '/login'
     end
     @tweet = Tweet.find(params[:id])
-    if Helpers.current_user(session).id != @tweet.user_id
-      flash[:wrong_user_edit] = "Sorry you can only edit your own tweets"
-      redirect to '/tweets'
+    if @tweet.user == Helpers.current_user(session)
+        erb :'/tweets/edit'
+    else
+      redirect to '/login'
     end
-    erb :"tweets/edit_tweet"
   end
 
   patch '/tweets/:id' do
-    tweet = Tweet.find(params[:id])
-    if params["content"].empty?
-      flash[:empty_tweet] = "Please enter content for your tweet"
-      redirect to "/tweets/#{params[:id]}/edit"
-    end
-    tweet.update(:content => params["content"])
-    tweet.save
+    @tweet = Tweet.find(params[:id])
 
-    redirect to "/tweets/#{tweet.id}"
+    if params[:content].empty?
+      redirect to "/tweets/#{@tweet.id}/edit"
+    end
+
+    @tweet.update(content: params["content"])
+    @tweet.save
+    redirect to "/tweets/#{@tweet.id}"
+
   end
 
-  post '/tweets/:id/delete' do
-    if !Helpers.is_logged_in?(session)
+  delete '/tweets/:id/delete' do
+    if Helpers.is_logged_in?(session)
+      @tweet = Tweet.find(params[:id])
+      if @tweet.user == Helpers.current_user(session)
+        @tweet = Tweet.find_by_id(params[:id])
+        @tweet.delete
+        redirect to '/tweets'
+      else
+        redirect to '/tweets'
+      end
+    else
       redirect to '/login'
     end
-    @tweet = Tweet.find(params[:id])
-    if Helpers.current_user(session).id != @tweet.user_id
-      flash[:wrong_user] = "Sorry you can only delete your own tweets"
-      redirect to '/tweets'
-    end
-    @tweet.delete
-    redirect to '/tweets'
   end
 
 end
