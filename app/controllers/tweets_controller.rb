@@ -1,5 +1,5 @@
 class TweetsController < ApplicationController
-    
+
     get '/' do
         @tweets = Tweet.all
         erb :index
@@ -23,7 +23,7 @@ class TweetsController < ApplicationController
 
     get '/tweets/:id/edit' do
         @tweet = Tweet.find_by_id(params[:id])
-        
+
         erb :'/tweets/edit'
     end
 
@@ -31,7 +31,7 @@ class TweetsController < ApplicationController
         @tweet = Tweet.find_by_id(params[:id])
         @tweet.content = params[:content]
         @tweet.save
-    
+
         redirect to("/tweets/#{@tweet.id}")
     end
 
